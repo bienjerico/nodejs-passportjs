@@ -5,37 +5,47 @@ var passport      = require('passport');
 require('.././config/passport')(passport);
 
 router.route('/signup')
-  .post(function(req,res,next){
-    passport.authenticate('local-signup', {
-      successRedirect : '/login', // redirect to the secure profile section
-      failureRedirect : '/signup', // redirect back to the signup page if there is an error
-      passReqToCallback: true
-    })(req,res,next)
+  .post(passport.authenticate('local-signup'),function(req,res){
+      var result = {message : req.flash('signupMessage')[0]};
+      console.log(result);
+      res.json(result);
   })
   .get(function(req,res){
-    console.log(req.flash('signupMessage'));
+    console.log(req.flash('signupMessage')[0]);
     res.send("<p>Please Sigup!</p><form method='post' action='/signup'><input type='text' name='email'/><input type='password' name='password'/><button type='submit' value='submit'>Submit</buttom></form>");    
   });
 
 router.route('/login')
-  .post(function(req,res,next){
-    passport.authenticate('local-login', {
-      successRedirect : '/profile', // redirect to the secure profile section
-      failureRedirect : '/login', // redirect back to the signup page if there is an error
-      passReqToCallback: true
-    })(req,res,next)
+  .post(passport.authenticate('local-login'),function(req,res){
+      var result = {message : req.flash('loginMessage')[0]};
+      console.log(result);
+      res.json(result);
   })
   .get(function(req,res){
-    console.log(req.flash('loginMessage'));
-    res.send("<p>Please login!</p><form method='post' action='/login'><input type='text' name='email'/><input type='password' name='password'/><button type='submit' value='submit'>Submit</buttom></form>");    
+    res.send("<p>Please Sigup!</p><form method='post' action='/login'><input type='text' name='email'/><input type='password' name='password'/><button type='submit' value='submit'>Submit</buttom></form>");    
   });
 
 router.route('/profile')
-  .get(function(req,res){
+  .get(loggedIn,function(req,res){
+    isLoggedIn();
     console.log(req.isAuthenticated());
     console.log(req.user.email);
     console.log(req.flash('loginMessage'));
-    res.send("Congratulations! you've successfully logged in.");    
+    res.send("Congratulations! you've successfully logged in. Your e-mail address is :" + req.user.email);    
   });
 
+router.route('/logout')
+  .get(function(req,res){
+    console.log('logout');
+    req.logout();     
+    res.redirect('/login')
+  });
+
+function loggedIn(req, res, next) {
+    if (req.user) {
+        next();
+    } else {
+        res.redirect('/login');
+    }
+}
 module.exports = router;

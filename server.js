@@ -6,8 +6,6 @@ var passport      = require('passport');
 var cookieParser  = require('cookie-parser');
 var session       = require('express-session');
 var flash         = require('connect-flash');
-
-
 // middleware
 app.use(express.static(__dirname + "/public"));
 app.use(bodyParser.urlencoded({ extended: true }));// parse application/x-www-form-urlencoded

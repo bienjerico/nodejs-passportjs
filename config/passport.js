@@ -25,7 +25,7 @@ module.exports = function(passport) {
     // used to serialize the user for the session
     passport.serializeUser(function(user, done) {
         console.log("serialize");
-        console.log(user);
+        // console.log(user);
 		done(null, user.id);
     });
 
@@ -55,10 +55,10 @@ module.exports = function(passport) {
 
 		// find a user whose email is the same as the forms email
 		// we are checking to see if the user trying to login already exists
-        console.log("select * from users where email = '"+email+"'");
+        // console.log("select * from users where email = '"+email+"'");
         connection.query("select * from users where email = '"+email+"'",function(err,rows){
-			console.log(rows +" = "+ rows.length);
-			console.log("above row object");
+			// console.log(rows +" = "+ rows.length);
+			// console.log("above row object");
 			if (err){
                 return done(err);
             }
@@ -75,7 +75,7 @@ module.exports = function(passport) {
                 newUserMysql.password = password; // use the generateHash function in our user model
 			
 				var insertQuery = "INSERT INTO users ( email, password ) values ('" + email +"','"+ password +"')";
-					console.log(insertQuery);
+					// console.log(insertQuery);
 				connection.query(insertQuery,function(err,rows){
 				newUserMysql.id = rows.insertId;
 				
