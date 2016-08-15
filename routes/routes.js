@@ -22,16 +22,56 @@ router.route('/login')
       res.json(result);
   })
   .get(function(req,res){
-    res.send("<p>Please Sigup!</p><form method='post' action='/login'><input type='text' name='email'/><input type='password' name='password'/><button type='submit' value='submit'>Submit</buttom></form>");    
+    res.send("<p>Please Login!</p><form method='post' action='/login'><input type='text' name='email'/><input type='password' name='password'/><button type='submit' value='submit'>Submit</buttom></form><a href='/auth/google'>GOOGLE LOGIN</a>");    
   });
+
+// =========================================================================
+// GOOGLE ==================================================================
+// =========================================================================  
+router.route('/google')
+  .get(function(req,res){
+    res.send("<a href='/auth/google'>GOOGLE LOGIN</a>");    
+  });
+
+
+router.route('/auth/google')
+    .get(passport.authenticate('google', { 
+        scope : ['profile', 'email'] 
+      }));
+
+// the callback after google has authenticated the user
+router.route('/auth/google/callback')
+      .get(passport.authenticate('google', {
+              successRedirect : '/profile',
+              failureRedirect : '/google'
+      }));
+
+// =========================================================================
+// GITHUB ==================================================================
+// =========================================================================
+router.route('/github')
+  .get(function(req,res){
+    res.send("<a href='/auth/github'>GITHUB LOGIN</a>");    
+  });
+
+
+router.route('/auth/github')
+    .get(passport.authenticate('github', { 
+        scope: [ 'user:email' ]
+      }));
+// the callback after google has authenticated the user
+router.route('/auth/github/callback')
+      .get(passport.authenticate('github', {
+              successRedirect : '/profile',
+              failureRedirect : '/github'
+      }));
+
 
 router.route('/profile')
   .get(loggedIn,function(req,res){
-    isLoggedIn();
     console.log(req.isAuthenticated());
-    console.log(req.user.email);
-    console.log(req.flash('loginMessage'));
-    res.send("Congratulations! you've successfully logged in. Your e-mail address is :" + req.user.email);    
+    console.log(req);
+    res.send("Congratulations! you've successfully logged in. Your e-mail address is :" + req.user.email+" <br> google token : "+ req.user.google_token);    
   });
 
 router.route('/logout')

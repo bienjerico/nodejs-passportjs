@@ -2,7 +2,12 @@
 				
 // load all the things we need
 var LocalStrategy   = require('passport-local').Strategy;
+var GoogleStrategy = require('passport-google-oauth20').Strategy;
+var GitHubStrategy = require('passport-github2').Strategy;
+
 var mysql = require('mysql');
+// load the auth variables
+var configAuth = require('./auth');
 
 
 var connection = mysql.createConnection({
@@ -117,9 +122,108 @@ module.exports = function(passport) {
             return done(null, rows[0],req.flash('loginMessage', 'Successfully logged in.'));			
 		
 		});
-		
+    }));
 
 
+
+
+    // =========================================================================
+    // GOOGLE ==================================================================
+    // =========================================================================
+    passport.use(new GoogleStrategy({
+
+        clientID        : configAuth.googleAuth.clientID,
+        clientSecret    : configAuth.googleAuth.clientSecret,
+        callbackURL     : configAuth.googleAuth.callbackURL,
+
+    },
+    function(token, refreshToken, profile, done) {
+
+        // make the code asynchronous
+        // User.findOne won't fire until we have all our data back from Google
+        process.nextTick(function() {
+
+            // try to find the user based on their google id
+            // User.findOne({ 'google.id' : profile.id }, function(err, user) {
+            connection.query("SELECT * FROM `users` WHERE `google_id` = '" + profile.id  + "'",function(err,rows){
+                if (err){
+                    return done(err);
+                }
+
+                if (rows.length) {
+
+                    // if a user is found, log them in
+                    return done(null, rows[0]);
+                } else {
+                    // if the user isnt in our database, create a new user
+                    var newUser           = new Object();
+
+                    // set all of the relevant information
+                    newUser.google_id    = profile.id;
+                    newUser.google_token = token;
+                    newUser.google_displayname  = profile.displayName;
+                    newUser.google_email = profile.emails[0].value; // pull the first email
+
+                    var insertQuery = "INSERT INTO users ( `google_id`,`google_token`,`google_displayname`,`google_email` ) values ('" + profile.id +"','"+ token +"','"+ profile.displayName +"','"+ profile.emails[0].value +"')";
+                    // console.log(insertQuery);
+                    connection.query(insertQuery,function(err,rows){
+                    newUser.id = rows.insertId;
+                    
+                    return done(null, newUser);
+                    })
+                }
+            })
+        })
+    }));
+
+
+     // =========================================================================
+    // GITHUB ==================================================================
+    // =========================================================================
+    passport.use(new GitHubStrategy({
+
+        clientID        : configAuth.githubAuth.clientID,
+        clientSecret    : configAuth.githubAuth.clientSecret,
+        callbackURL     : configAuth.githubAuth.callbackURL,
+
+    },
+    function(token, refreshToken, profile, done) {
+
+        // make the code asynchronous
+        // User.findOne won't fire until we have all our data back from Google
+        process.nextTick(function() {
+
+            // try to find the user based on their google id
+            // User.findOne({ 'google.id' : profile.id }, function(err, user) {
+            connection.query("SELECT * FROM `users` WHERE `github_id` = '" + profile.id  + "'",function(err,rows){
+                if (err){
+                    return done(err);
+                }
+
+                if (rows.length) {
+
+                    // if a user is found, log them in
+                    return done(null, rows[0]);
+                } else {
+                    // if the user isnt in our database, create a new user
+                    var newUser           = new Object();
+
+                    // set all of the relevant information
+                    newUser.github_id    = profile.id;
+                    newUser.github_token = token;
+                    newUser.github_displayname  = profile.displayName;
+                    newUser.github_email = profile.emails[0].value; // pull the first email
+
+                    var insertQuery = "INSERT INTO users ( `github_id`,`github_token`,`github_displayname`,`github_email` ) values ('" + profile.id +"','"+ token +"','"+ profile.displayName +"','"+ profile.emails[0].value +"')";
+                    // console.log(insertQuery);
+                    connection.query(insertQuery,function(err,rows){
+                    newUser.id = rows.insertId;
+                    
+                    return done(null, newUser);
+                    })
+                }
+            })
+        })
     }));
 
 };
